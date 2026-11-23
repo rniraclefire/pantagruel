@@ -1,0 +1,2 @@
+[env]
+RUR_FREETYPE_SRC = { value = "vendor/freetype-2.14.2", relative = true }
