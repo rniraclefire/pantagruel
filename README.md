@@ -31,5 +31,7 @@ Pantagruel was made possible, and builds upon
 [Anime Vanguard's](https://github.com/Anime-Vanguards) ror-ree-rur stack.
 
 Roblox and Roblox Studio are trademarks of Roblox Corporation. Luau is a
-trademark of Roblox Corporation. This project is not affiliated with, sponsored
-by, or endorsed by Roblox Corporation.
+trademark of Roblox Corporation. Luduvo is a trademark of Luduvo Corporation.
+This project is not affiliated with, sponsored by, or endorsed by Roblox
+Corporation or Luduvo Corporation. It is an independent project and is not
+a product of Vortex Interactive LLC.
