@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use rbx_dom_weak::{WeakDom, types::Ref};
-use ror::scene::{Scene, extract::extract, load::Document};
+use ror::scene::{Playback, Scene, extract::extract, load::Document};
 
-use crate::{
-    place::{DomVersion, Place, dom::place_weak_dom},
-    viewport::scene::SceneCache::Available,
-};
+use crate::place::{DomVersion, Place, dom::place_weak_dom};
+
+const PREWARM: f32 = 10.0;
 
 fn service(dom: &WeakDom, class_name: &str) -> Option<Ref> {
     dom.root()
@@ -44,25 +43,59 @@ pub fn place_document(dom: WeakDom) -> Document {
     document
 }
 
+pub struct Cached {
+    pub scene: Arc<Scene>,
+    pub document: Document,
+}
+
+impl Cached {
+    pub fn animated(&self) -> bool {
+        !self.scene.particles.is_empty()
+    }
+
+    pub fn at(&self, time: f32) -> Arc<Scene> {
+        if !self.animated() {
+            return self.scene.clone();
+        }
+
+        let playback = Playback {
+            time,
+            prewarm: PREWARM,
+            ..Default::default()
+        };
+        let resolved = match playback.resolve(&self.document) {
+            Ok(resolved) => resolved,
+            Err(error) => {
+                log::error!("particle playback failed: {error:#}");
+                return self.scene.clone();
+            }
+        };
+
+        let mut scene = (*self.scene).clone();
+        resolved.apply_history(&self.document, &mut scene);
+        Arc::new(scene)
+    }
+}
+
 #[derive(Default)]
 pub enum SceneCache {
     #[default]
     Pending,
-    Available(Arc<Scene>, DomVersion),
+    Available(Cached, DomVersion),
 }
 
 impl SceneCache {
-    pub fn get(&mut self, place: &Place) -> Arc<Scene> {
-        let next_version = place.dom_version();
-        if let Self::Available(scene, prev_version) = self
-            && *prev_version == next_version
-        {
-            scene.clone()
-        } else {
+    pub fn get(&mut self, place: &Place) -> &Cached {
+        let version = place.dom_version();
+        if !matches!(self, Self::Available(_, prev) if *prev == version) {
             let document = place_document(place_weak_dom(place));
             let scene = Arc::new(extract(&document));
-            *self = Available(scene.clone(), next_version);
-            scene
+            *self = Self::Available(Cached { scene, document }, version);
+        }
+
+        match self {
+            Self::Available(cached, _) => cached,
+            Self::Pending => unreachable!(),
         }
     }
 }

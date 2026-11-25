@@ -29,8 +29,12 @@ impl DockWidget for Viewport {
         let place = &*ctx.place;
         let graphics = ctx.graphics;
 
-        let (rect, response) =
-            ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag());
+        let (rect, response) = egui::Frame::new()
+            .inner_margin(ui.spacing().window_margin)
+            .show(ui, |ui| {
+                ui.allocate_exact_size(ui.available_size(), egui::Sense::click_and_drag())
+            })
+            .inner;
 
         if rect.width() < 1.0 || rect.height() < 1.0 {
             return;
@@ -40,7 +44,14 @@ impl DockWidget for Viewport {
         let moved = camera.update(ui, &response);
         let view = view::request(ui, rect, &camera.view());
         let size = [view.width, view.height];
-        let scene = self.scene.get(place);
+
+        let cached = self.scene.get(place);
+        let animated = cached.animated();
+        let scene = if animated {
+            cached.at(ui.input(|i| i.time) as f32)
+        } else {
+            cached.scene.clone()
+        };
 
         let thread = self
             .thread
@@ -64,5 +75,9 @@ impl DockWidget for Viewport {
         }
 
         self.texture.paint(ui, rect);
+
+        if animated {
+            ui.ctx().request_repaint();
+        }
     }
 }

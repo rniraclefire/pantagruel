@@ -13,10 +13,17 @@ pub type DomVersion = (u64, u64, u32);
 
 impl Place {
     pub fn open(path: &Path, options: ree::Options) -> anyhow::Result<Self> {
-        let engine = ree::Engine::new(options).map_err(anyhow::Error::msg)?;
+        let engine = ree::Engine::new(ree::Options {
+            mode: "edit".into(),
+            ..options
+        })
+        .map_err(anyhow::Error::msg)?;
+
         let emulator = ree::Emulator::start(engine, &ree::mount::ProjectSpec::default())
             .map_err(anyhow::Error::msg)?;
+
         let world = emulator.engine.world();
+
         ree::project::load_snapshot(&emulator.engine, &path, world.game)
             .map_err(anyhow::Error::msg)?;
 
