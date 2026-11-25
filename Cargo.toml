@@ -21,12 +21,13 @@ eframe = { version = "=0.33.3", default-features = false, features = [
 egui_tiles = "0.14"
 serde = { version = "1.0.219", features = ["derive"] }
 log = "0.4.27"
-ror = { git = "https://github.com/Anime-Vanguards/roblox-object-renderer" }
-ror_assets = { git = "https://github.com/Anime-Vanguards/roblox-object-renderer", package = "ror-assets" }
+ror = { git = "https://github.com/Anime-Vanguards/roblox-object-renderer", rev = "7f69e244c16df0c4d835d73ff31ae3398fd6a399" }
+ror_assets = { git = "https://github.com/Anime-Vanguards/roblox-object-renderer", package = "ror-assets", rev = "7f69e244c16df0c4d835d73ff31ae3398fd6a399" }
 ree = { git = "https://github.com/Anime-Vanguards/roblox-engine-emulator", package = "roblox-engine-emulator" }
 rur = { git = "https://github.com/Anime-Vanguards/roblox-ui-renderer", package = "rur-native" }
 anyhow = "=1.0.100"
 rbx_dom_weak = "4.2.0"
+glam = "=0.30.10"
 
 [patch.crates-io]
 luau0-src = { git = "https://github.com/Anime-Vanguards/roblox-engine-emulator", rev = "4f8ee744c35b2eeb480bf59473f2b0a7360e3a2d" }

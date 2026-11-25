@@ -1,6 +1,6 @@
 use std::path::Path;
 
-pub mod exports;
+pub mod dom;
 pub mod properties;
 
 pub struct Place {

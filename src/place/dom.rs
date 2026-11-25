@@ -4,30 +4,6 @@ use rbx_dom_weak::types::Ref;
 use rbx_dom_weak::{InstanceBuilder, WeakDom};
 use ree::record::encode;
 
-use super::Place;
-
-const SKIPPED_CLASSES: &[&str] = &["SurfaceGui", "BillboardGui", "ScreenGui"];
-const KEPT_UNMODELED: &[&str] = &["InitialSize", "MeshSize"];
-
-impl Place {
-    pub fn to_weak_dom(&self) -> WeakDom {
-        let engine = &self.emulator.engine;
-        let state = engine.state.borrow();
-        let dom = &state.dom;
-
-        let mut weak = WeakDom::new(InstanceBuilder::new("DataModel"));
-        let copies = copy_tree(dom, &engine.reflection, &mut weak, self.world.game);
-
-        for (&id, &copy) in &copies {
-            if let Some(target) = weak.get_by_ref_mut(copy) {
-                copy_properties(engine, dom, &copies, id, target);
-            }
-        }
-
-        weak
-    }
-}
-
 fn class_name<'a>(reflection: &'a ree::Reflection, dom: &ree::Dom, id: ree::InstanceId) -> &'a str {
     &reflection.class(dom.class_of(id)).name
 }
@@ -50,10 +26,8 @@ fn copy_tree(
         let Some(instance) = dom.get(id) else {
             continue;
         };
+
         let class = class_name(reflection, dom, id);
-        if SKIPPED_CLASSES.contains(&class) {
-            continue;
-        }
 
         let copy = weak.insert(
             parent,
@@ -94,10 +68,25 @@ fn copy_properties(
     let Some(unmodeled) = &dom.at(id).unmodeled else {
         return;
     };
-    for (name, variant) in unmodeled
-        .iter()
-        .filter(|(name, _)| KEPT_UNMODELED.contains(name))
-    {
+
+    for (name, variant) in unmodeled.iter() {
         target.properties.insert(name.into(), variant);
     }
+}
+
+pub fn place_weak_dom(place: &super::Place) -> WeakDom {
+    let engine = &place.emulator.engine;
+    let state = engine.state.borrow();
+    let dom = &state.dom;
+
+    let mut weak = WeakDom::new(InstanceBuilder::new("DataModel"));
+    let copies = copy_tree(dom, &engine.reflection, &mut weak, place.world.game);
+
+    for (&id, &copy) in &copies {
+        if let Some(target) = weak.get_by_ref_mut(copy) {
+            copy_properties(engine, dom, &copies, id, target);
+        }
+    }
+
+    weak
 }

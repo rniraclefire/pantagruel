@@ -5,7 +5,8 @@ pub mod settings;
 use std::path::Path;
 use std::sync::Arc;
 
-use self::dock::{Dock, DockBehavior};
+use self::dock::DockBehavior;
+use self::session::Session;
 use self::settings::Settings;
 use crate::viewport::graphics::Graphics;
 
@@ -14,7 +15,7 @@ pub const APP_ID: &str = "pantagruel";
 pub struct App {
     pub graphics: Graphics,
     pub settings: Settings,
-    pub sessions: Vec<self::session::Session>,
+    pub sessions: Vec<Session>,
     pub active: usize,
 }
 
@@ -23,11 +24,7 @@ impl App {
         cc: &eframe::CreationContext<'_>,
         gpu: Arc<ror::render::gpu::Gpu>,
     ) -> anyhow::Result<Self> {
-        let settings: Settings = cc
-            .storage
-            .and_then(|storage| eframe::get_value(storage, "settings"))
-            .unwrap_or_default();
-
+        let settings = Settings::load(cc.storage);
         let graphics = Graphics::new(gpu, cc, &settings)?;
 
         let mut app = Self {
@@ -50,7 +47,7 @@ impl App {
     }
 
     pub fn open(&mut self, path: &Path) {
-        match self::session::Session::open(path, Default::default()) {
+        match Session::open(path, Default::default()) {
             Ok(session) => {
                 self.sessions.push(session);
                 self.active = self.sessions.len() - 1;
@@ -90,11 +87,10 @@ impl eframe::App for App {
             None => {
                 ui.centered_and_justified(|ui| ui.weak("No place open"));
             }
-
             Some(session) => {
                 let mut behavior = DockBehavior {
                     place: &mut session.place,
-                    graphics: &mut self.graphics,
+                    graphics: &self.graphics,
                 };
                 session.dock.ui(&mut behavior, ui);
             }
@@ -102,6 +98,6 @@ impl eframe::App for App {
     }
 
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, "settings", &self.settings);
+        self.settings.save(storage);
     }
 }

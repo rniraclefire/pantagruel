@@ -1,48 +1,25 @@
 use std::sync::Arc;
 
-use crate::place::{DomVersion, Place};
-use rbx_dom_weak::WeakDom;
-use ror::scene::load::Document;
+use rbx_dom_weak::{WeakDom, types::Ref};
+use ror::scene::{Scene, extract::extract, load::Document};
 
-#[derive(Default)]
-pub struct SceneCache {
-    built: Option<(Arc<ror::scene::Scene>, DomVersion)>,
+use crate::{
+    place::{DomVersion, Place, dom::place_weak_dom},
+    viewport::scene::SceneCache::Available,
+};
+
+fn service(dom: &WeakDom, class_name: &str) -> Option<Ref> {
+    dom.root()
+        .children()
+        .iter()
+        .copied()
+        .find(|&r| dom.get_by_ref(r).is_some_and(|i| i.class == class_name))
 }
 
-impl SceneCache {
-    pub fn get(&mut self, place: &Place) -> Arc<ror::scene::Scene> {
-        let version = place.dom_version();
-        if !self
-            .built
-            .as_ref()
-            .is_some_and(|(_, built)| *built == version)
-        {
-            let document = place_document(place.to_weak_dom());
-            self.built = Some((Arc::new(ror::scene::extract::extract(&document)), version));
-        }
-        Arc::clone(&self.built.as_ref().expect("just built").0)
-    }
-
-    pub fn is_still_valid(&mut self, before: DomVersion, after: DomVersion) {
-        if let Some((_, built)) = &mut self.built {
-            if *built == before {
-                *built = after;
-            }
-        }
-    }
-}
-
-fn place_document(dom: WeakDom) -> Document {
-    let service = |class: &str| {
-        dom.root()
-            .children()
-            .iter()
-            .copied()
-            .find(|&r| dom.get_by_ref(r).is_some_and(|i| &*i.class == class))
-    };
-    let workspace = service("Workspace");
-    let lighting = service("Lighting");
-    let material_service = service("MaterialService");
+pub fn place_document(dom: WeakDom) -> Document {
+    let workspace = service(&dom, "Workspace");
+    let lighting = service(&dom, "Lighting");
+    let material_service = service(&dom, "MaterialService");
 
     let roots = workspace
         .and_then(|ws| dom.get_by_ref(ws))
@@ -63,5 +40,29 @@ fn place_document(dom: WeakDom) -> Document {
     document.roots = roots;
     document.lighting = lighting;
     document.material_service = material_service;
+
     document
+}
+
+#[derive(Default)]
+pub enum SceneCache {
+    #[default]
+    Pending,
+    Available(Arc<Scene>, DomVersion),
+}
+
+impl SceneCache {
+    pub fn get(&mut self, place: &Place) -> Arc<Scene> {
+        let next_version = place.dom_version();
+        if let Self::Available(scene, prev_version) = self
+            && *prev_version == next_version
+        {
+            scene.clone()
+        } else {
+            let document = place_document(place_weak_dom(place));
+            let scene = Arc::new(extract(&document));
+            *self = Available(scene.clone(), next_version);
+            scene
+        }
+    }
 }

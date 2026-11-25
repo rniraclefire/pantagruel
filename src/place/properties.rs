@@ -1,5 +1,6 @@
 use std::rc::Rc;
 
+use glam::{Mat3, Vec3};
 use rbx_dom_weak::types::{CFrame, Matrix3, Variant, Vector3};
 
 use super::Place;
@@ -9,21 +10,6 @@ impl Place {
         let engine = &self.emulator.engine;
         let name = engine.reflection.name_id(property)?;
         engine.state.borrow().dom.raw_get(id, name).cloned()
-    }
-
-    pub fn set(&mut self, id: ree::InstanceId, property: &str, value: ree::Value) -> bool {
-        let engine = &self.emulator.engine;
-        let Some(name) = engine.reflection.name_id(property) else {
-            return false;
-        };
-        let hooks = engine.hooks.borrow();
-        let mut state = engine.state.borrow_mut();
-        let changed =
-            ree::instance::raw_set(&mut state, &engine.reflection, &hooks, id, name, value);
-        if changed && property == "Name" {
-            state.dom.refresh_name(&engine.reflection, id);
-        }
-        changed
     }
 
     pub fn get_number(&self, id: ree::InstanceId, property: &str) -> Option<f64> {
@@ -39,14 +25,6 @@ impl Place {
             _ => None,
         }
     }
-
-    pub fn set_cframe(&mut self, id: ree::InstanceId, property: &str, cframe: CFrame) -> bool {
-        self.set(
-            id,
-            property,
-            ree::Value::Dom(Rc::new(Variant::CFrame(cframe))),
-        )
-    }
 }
 
 pub fn cframe(position: [f32; 3], rows: [[f32; 3]; 3]) -> CFrame {
@@ -54,5 +32,18 @@ pub fn cframe(position: [f32; 3], rows: [[f32; 3]; 3]) -> CFrame {
     CFrame::new(
         vector(position),
         Matrix3::new(vector(rows[0]), vector(rows[1]), vector(rows[2])),
+    )
+}
+
+pub fn to_glam(cf: CFrame) -> (Vec3, Mat3) {
+    let p = cf.position;
+    let o = cf.orientation;
+    (
+        Vec3::new(p.x, p.y, p.z),
+        Mat3::from_cols(
+            Vec3::new(o.x.x, o.y.x, o.z.x),
+            Vec3::new(o.x.y, o.y.y, o.z.y),
+            Vec3::new(o.x.z, o.y.z, o.z.z),
+        ),
     )
 }

@@ -1,2 +1,3 @@
 [env]
 RUR_FREETYPE_SRC = { value = "vendor/freetype-2.14.2", relative = true }
+ROR_STUDIO_COOKIE = "1"
