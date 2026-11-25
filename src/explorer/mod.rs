@@ -1,6 +1,26 @@
 use std::collections::HashSet;
 
-use crate::app::dock::{DockContext, DockWidget};
+use crate::{
+    app::dock::{DockContext, DockWidget},
+    widgets::{search::Search, toolbar::toolbar},
+};
+
+const VISIBLE_SERVICES: &[&str] = &[
+    "Workspace",
+    "Players",
+    "Lighting",
+    "MaterialService",
+    "ReplicatedFirst",
+    "ReplicatedStorage",
+    "ServerScriptService",
+    "ServerStorage",
+    "StarterGui",
+    "StarterPack",
+    "StarterPlayer",
+    "Teams",
+    "SoundService",
+    "TextChatService",
+];
 
 struct Row {
     id: ree::InstanceId,
@@ -16,7 +36,7 @@ struct RowEvents {
 
 #[derive(Default)]
 pub struct Explorer {
-    query: String,
+    search: Search,
     expanded: HashSet<ree::InstanceId>,
 }
 
@@ -53,13 +73,12 @@ impl Explorer {
         }
     }
 
-    fn search(&self, dom: &ree::Dom, root: ree::InstanceId) -> HashSet<ree::InstanceId> {
-        let query = self.query.to_lowercase();
+    fn matches(&self, dom: &ree::Dom, root: ree::InstanceId) -> HashSet<ree::InstanceId> {
         let mut keep = HashSet::new();
 
         for id in dom.descendants(root) {
             let Some(node) = dom.get(id) else { continue };
-            if !node.name.to_str_lossy().to_lowercase().contains(&query) {
+            if !self.search.matches(&node.name.to_str_lossy()) {
                 continue;
             }
 
@@ -75,28 +94,21 @@ impl Explorer {
         keep
     }
 
-    fn search_bar(&mut self, ui: &mut egui::Ui) {
-        egui::Frame::new()
-            .inner_margin(ui.spacing().menu_margin)
-            .show(ui, |ui| {
-                ui.add(
-                    egui::TextEdit::singleline(&mut self.query)
-                        .hint_text("Search")
-                        .desired_width(f32::INFINITY),
-                );
-            });
-    }
-
     fn tree(
         &mut self,
         ui: &mut egui::Ui,
         dom: &ree::Dom,
+        reflection: &ree::reflection::Reflection,
         root: ree::InstanceId,
         selection: &mut Vec<ree::InstanceId>,
     ) {
-        let filter = (!self.query.is_empty()).then(|| self.search(dom, root));
+        let filter = self.search.is_active().then(|| self.matches(dom, root));
         let mut rows = Vec::new();
-        for &child in dom.children_of(root) {
+        let services = VISIBLE_SERVICES
+            .iter()
+            .filter_map(|name| reflection.class_id(name))
+            .filter_map(|class| dom.find_child_of_class(root, class));
+        for child in services {
             self.collect(dom, child, 0, filter.as_ref(), &mut rows);
         }
 
@@ -214,11 +226,15 @@ impl DockWidget for Explorer {
     }
 
     fn ui(&mut self, ctx: &mut DockContext<'_>) {
-        self.search_bar(ctx.ui);
+        toolbar(ctx.ui, |ui| {
+            self.search.ui(ui, "Search instances");
+        });
+
         let state = ctx.place.emulator.engine.state.borrow();
         self.tree(
             ctx.ui,
             &state.dom,
+            &ctx.place.emulator.engine.reflection,
             ctx.place.world.game,
             &mut ctx.place.selection,
         );

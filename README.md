@@ -1,5 +1,7 @@
 # Pantagruel
 
+![Thumbnail](./.github/assets/thumb.png)
+
 An alternative editor for Roblox developers.
 
 Pantagruel is the official successor to

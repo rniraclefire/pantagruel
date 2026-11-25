@@ -55,29 +55,14 @@ impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
         }
     }
 
-    fn top_bar_right_ui(
-        &mut self,
+    fn tab_outline_stroke(
+        &self,
+        _visuals: &egui::Visuals,
         _tiles: &egui_tiles::Tiles<BoxedWidget>,
-        ui: &mut egui::Ui,
-        tile_id: egui_tiles::TileId,
-        _tabs: &egui_tiles::Tabs,
-        _scroll_offset: &mut f32,
-    ) {
-        let size = egui::Vec2::splat(ui.spacing().interact_size.y);
-        let (rect, _) = ui.allocate_exact_size(size, egui::Sense::hover());
-        let response = ui.interact(rect, tile_id.egui_id(self.tree_id), egui::Sense::drag());
-
-        ui.painter().text(
-            rect.center(),
-            egui::Align2::CENTER_CENTER,
-            "⠿",
-            egui::TextStyle::Body.resolve(ui.style()),
-            ui.style().interact(&response).fg_stroke.color,
-        );
-
-        if response.hovered() {
-            ui.ctx().set_cursor_icon(egui::CursorIcon::Grab);
-        }
+        _tile_id: egui_tiles::TileId,
+        _state: &egui_tiles::TabState,
+    ) -> egui::Stroke {
+        egui::Stroke::NONE
     }
 }
 

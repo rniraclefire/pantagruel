@@ -6,6 +6,7 @@ mod properties;
 mod ribbon_bar;
 mod status_bar;
 mod viewport;
+mod widgets;
 
 use eframe::egui_wgpu;
 use std::sync::Arc;

@@ -28,6 +28,8 @@ rur = { git = "https://github.com/Anime-Vanguards/roblox-ui-renderer", package =
 anyhow = "=1.0.100"
 rbx_dom_weak = "4.2.0"
 glam = "=0.30.10"
+egui_extras = "=0.33.0"
+serde_json = "=1.0.145"
 
 [patch.crates-io]
 luau0-src = { git = "https://github.com/Anime-Vanguards/roblox-engine-emulator", rev = "4f8ee744c35b2eeb480bf59473f2b0a7360e3a2d" }
