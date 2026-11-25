@@ -9,6 +9,7 @@ use self::dock::DockBehavior;
 use self::session::Session;
 use self::settings::Settings;
 use crate::viewport::graphics::Graphics;
+use crate::{ribbon_bar, status_bar};
 
 pub const APP_ID: &str = "pantagruel";
 
@@ -83,18 +84,28 @@ impl eframe::App for App {
             egui::TopBottomPanel::top("sessions").show(ctx, |ui| self.tab_strip(ui));
         }
 
-        egui::CentralPanel::default().show(ctx, |ui| match self.sessions.get_mut(self.active) {
+        match self.sessions.get_mut(self.active) {
             None => {
-                ui.centered_and_justified(|ui| ui.weak("No place open"));
+                // tba
             }
             Some(session) => {
-                let mut behavior = DockBehavior {
-                    place: &mut session.place,
-                    graphics: &self.graphics,
-                };
-                session.dock.ui(&mut behavior, ui);
+                egui::TopBottomPanel::top("ribbon").show(ctx, ribbon_bar::ui);
+                egui::TopBottomPanel::bottom("status").show(ctx, status_bar::ui);
+
+                egui::CentralPanel::default()
+                    .frame(
+                        egui::Frame::central_panel(&ctx.style()).inner_margin(egui::Margin::ZERO),
+                    )
+                    .show(ctx, |ui| {
+                        let mut behavior = DockBehavior {
+                            place: &mut session.place,
+                            graphics: &self.graphics,
+                            tree_id: session.dock.id(),
+                        };
+                        session.dock.ui(&mut behavior, ui);
+                    });
             }
-        });
+        };
     }
 
     fn save(&mut self, storage: &mut dyn eframe::Storage) {

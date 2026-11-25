@@ -1,6 +1,10 @@
 mod app;
 mod explorer;
+mod output;
 mod place;
+mod properties;
+mod ribbon_bar;
+mod status_bar;
 mod viewport;
 
 use eframe::egui_wgpu;
