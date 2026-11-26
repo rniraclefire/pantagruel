@@ -1,39 +1,15 @@
 mod app;
-mod explorer;
-mod output;
+mod browser;
+mod editor;
 mod place;
-mod properties;
-mod ribbon_bar;
-mod status_bar;
-mod viewport;
 mod widgets;
 
-use eframe::egui_wgpu;
-use std::sync::Arc;
+use app::App;
 
-fn main() -> eframe::Result {
-    env_logger::init();
-
-    let gpu = Arc::new(ror::render::gpu::Gpu::new().expect("no usable GPU"));
-    gpu.device.set_device_lost_callback(|reason, message| {
-        eprintln!("lost gpu device: {reason:?}: {message}");
-    });
-
+pub fn main() -> eframe::Result {
     eframe::run_native(
-        "Pantagruel",
-        eframe::NativeOptions {
-            renderer: eframe::Renderer::Wgpu,
-            wgpu_options: egui_wgpu::WgpuConfiguration {
-                wgpu_setup: egui_wgpu::WgpuSetup::Existing(egui_wgpu::WgpuSetupExisting {
-                    instance: gpu.instance.clone(),
-                    adapter: gpu.adapter.clone(),
-                    device: gpu.device.clone(),
-                    queue: gpu.queue.clone(),
-                }),
-                ..Default::default()
-            },
-            ..Default::default()
-        },
-        Box::new(|cc| Ok(Box::new(app::App::new(cc, gpu)?))),
+        "Petrova",
+        eframe::NativeOptions::default(),
+        Box::new(|cc| Ok(Box::new(App::new(cc)))),
     )
 }

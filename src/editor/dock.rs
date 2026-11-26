@@ -1,16 +1,11 @@
-use crate::{
-    explorer::Explorer,
-    output::Output,
-    place::Place,
-    properties::Properties,
-    viewport::{Viewport, graphics::Graphics},
-};
+use crate::{editor::explorer::Explorer, place::Place};
 
 pub struct DockContext<'a> {
-    pub ui: &'a mut egui::Ui,
     pub tile_id: egui_tiles::TileId,
-    pub graphics: &'a Graphics,
+
+    pub ui: &'a mut egui::Ui,
     pub place: &'a mut Place,
+    pub selection: &'a mut Vec<ree::InstanceId>,
 }
 
 pub trait DockWidget {
@@ -22,9 +17,8 @@ pub type BoxedWidget = Box<dyn DockWidget>;
 pub type Dock = egui_tiles::Tree<BoxedWidget>;
 
 pub struct DockBehavior<'a> {
-    pub graphics: &'a Graphics,
     pub place: &'a mut Place,
-    pub tree_id: egui::Id,
+    pub selection: &'a mut Vec<ree::InstanceId>,
 }
 
 impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
@@ -41,8 +35,8 @@ impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
         let mut ctx = DockContext {
             ui,
             tile_id,
-            graphics: &mut self.graphics,
             place: &mut self.place,
+            selection: self.selection,
         };
         widget.ui(&mut ctx);
         egui_tiles::UiResponse::None
@@ -66,18 +60,18 @@ impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
     }
 }
 
-const SIDEBAR_FRACTION: f32 = 0.25;
-const VIEWPORT_FRACTION: f32 = 0.75;
-
 pub fn default_dock() -> Dock {
+    static SIDEBAR_FRACTION: f32 = 0.25;
+    static VIEWPORT_FRACTION: f32 = 0.75;
+
     use egui_tiles::{Linear, LinearDir};
 
     let mut tiles = egui_tiles::Tiles::<BoxedWidget>::default();
 
-    let viewport = tiles.insert_pane(Box::new(Viewport::default()));
+    let viewport = tiles.insert_pane(Box::new(Explorer::default()));
     let explorer = tiles.insert_pane(Box::new(Explorer::default()));
-    let output = tiles.insert_pane(Box::new(Output::default()));
-    let properties = tiles.insert_pane(Box::new(Properties::default()));
+    let output = tiles.insert_pane(Box::new(Explorer::default()));
+    let properties = tiles.insert_pane(Box::new(Explorer::default()));
 
     let sidebar = tiles.insert_vertical_tile(vec![explorer, properties]);
     let main = tiles.insert_container(Linear::new_binary(
