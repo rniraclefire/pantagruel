@@ -1,3 +1,3 @@
 pub fn ui(ui: &mut egui::Ui) {
-    ui.label("FPS 14567849587890");
+    ui.label(format!("{}fps", (1.0 / ui.input(|i| i.stable_dt)).round()));
 }

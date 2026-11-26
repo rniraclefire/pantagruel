@@ -44,6 +44,8 @@ impl App {
             app.open(&path);
         }
 
+        cc.egui_ctx.style_mut(|s| s.animation_time = 0.0);
+
         Ok(app)
     }
 
