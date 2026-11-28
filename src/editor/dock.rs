@@ -1,11 +1,11 @@
-use crate::{editor::explorer::Explorer, place::Place};
+use crate::editor::{
+    EditorState, explorer::Explorer, output::Output, properties::Properties, viewport::Viewport,
+};
 
 pub struct DockContext<'a> {
     pub tile_id: egui_tiles::TileId,
-
     pub ui: &'a mut egui::Ui,
-    pub place: &'a mut Place,
-    pub selection: &'a mut Vec<ree::InstanceId>,
+    pub state: &'a mut EditorState,
 }
 
 pub trait DockWidget {
@@ -16,12 +16,9 @@ pub trait DockWidget {
 pub type BoxedWidget = Box<dyn DockWidget>;
 pub type Dock = egui_tiles::Tree<BoxedWidget>;
 
-pub struct DockBehavior<'a> {
-    pub place: &'a mut Place,
-    pub selection: &'a mut Vec<ree::InstanceId>,
-}
+pub struct DockBehavior<'a>(pub &'a mut EditorState);
 
-impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
+impl<'a> egui_tiles::Behavior<BoxedWidget> for DockBehavior<'a> {
     fn tab_title_for_pane(&mut self, widget: &BoxedWidget) -> egui::WidgetText {
         widget.title()
     }
@@ -35,8 +32,7 @@ impl egui_tiles::Behavior<BoxedWidget> for DockBehavior<'_> {
         let mut ctx = DockContext {
             ui,
             tile_id,
-            place: &mut self.place,
-            selection: self.selection,
+            state: &mut self.0,
         };
         widget.ui(&mut ctx);
         egui_tiles::UiResponse::None
@@ -68,10 +64,10 @@ pub fn default_dock() -> Dock {
 
     let mut tiles = egui_tiles::Tiles::<BoxedWidget>::default();
 
-    let viewport = tiles.insert_pane(Box::new(Explorer::default()));
+    let viewport = tiles.insert_pane(Box::new(Viewport::default()));
     let explorer = tiles.insert_pane(Box::new(Explorer::default()));
-    let output = tiles.insert_pane(Box::new(Explorer::default()));
-    let properties = tiles.insert_pane(Box::new(Explorer::default()));
+    let output = tiles.insert_pane(Box::new(Output::default()));
+    let properties = tiles.insert_pane(Box::new(Properties::default()));
 
     let sidebar = tiles.insert_vertical_tile(vec![explorer, properties]);
     let main = tiles.insert_container(Linear::new_binary(

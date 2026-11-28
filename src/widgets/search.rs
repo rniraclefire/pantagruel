@@ -1,3 +1,5 @@
+use crate::theme::Theme;
+
 #[derive(Default)]
 pub struct Search {
     pub query: String,
@@ -8,6 +10,7 @@ impl Search {
         ui.add(
             egui::TextEdit::singleline(&mut self.query)
                 .hint_text(hint)
+                .min_size(egui::vec2(0.0, Theme::of(ui).control_height))
                 .desired_width(f32::INFINITY),
         )
     }

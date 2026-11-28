@@ -3054,6 +3054,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "pantagruel"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "eframe",
+ "egui",
+ "egui_extras",
+ "egui_tiles",
+ "env_logger",
+ "glam",
+ "include_dir",
+ "log",
+ "rbx_dom_weak",
+ "rfd",
+ "roblox-engine-emulator 0.13.0",
+ "ror",
+ "ror-assets",
+ "rur-native",
+ "serde",
+ "serde_json",
+ "wasm-bindgen-futures",
+ "web-sys",
+]
+
+[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3093,31 +3118,6 @@ name = "percent-encoding"
 version = "2.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9b4f627cb1b25917193a259e49bdad08f671f8d9708acfd5fe0a8c1455d87220"
-
-[[package]]
-name = "petrova"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "eframe",
- "egui",
- "egui_extras",
- "egui_tiles",
- "env_logger",
- "glam",
- "include_dir",
- "log",
- "rbx_dom_weak",
- "rfd",
- "roblox-engine-emulator 0.13.0",
- "ror",
- "ror-assets",
- "rur-native",
- "serde",
- "serde_json",
- "wasm-bindgen-futures",
- "web-sys",
-]
 
 [[package]]
 name = "phf"

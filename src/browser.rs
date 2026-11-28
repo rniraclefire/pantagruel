@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use log::error;
 
-use crate::widgets::layout::toolbar;
+use crate::{theme::Theme, widgets::layout::toolbar};
 
 pub static TEMPLATE: &[u8] = include_bytes!("../assets/template.rbxl");
 
@@ -31,7 +31,8 @@ pub struct Browser {
 impl Browser {
     pub fn show(&mut self, ctx: &egui::Context) -> Option<PathBuf> {
         let mut open: Option<PathBuf> = None;
-        let frame = egui::Frame::new().fill(ctx.style().visuals.panel_fill);
+        let style = ctx.style();
+        let frame = egui::Frame::new().fill(style.visuals.panel_fill);
 
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             toolbar(ui, |ui| {
@@ -60,6 +61,7 @@ impl Browser {
 
                 egui::TextEdit::singleline(&mut self.search)
                     .hint_text("Search places")
+                    .min_size(egui::vec2(0.0, Theme::of(ui).control_height))
                     .show(ui);
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {

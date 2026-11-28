@@ -1,3 +1,6 @@
+pub mod datatypes;
+
+use crate::place::datatypes::DataType;
 use std::cell::{Ref, RefMut};
 use std::collections::HashMap;
 use std::path::Path;
@@ -70,6 +73,10 @@ impl Place {
             .unwrap_or_default()
     }
 
+    pub fn class_id(&self, id: ree::InstanceId) -> ree::ClassId {
+        self.dom().class_of(id)
+    }
+
     pub fn class_name(&self, id: ree::InstanceId) -> &str {
         let class = self.dom().class_of(id);
         &self.reflection().class(class).name
@@ -112,6 +119,18 @@ impl Place {
             name,
             value,
         )
+    }
+
+    pub fn get_as<T: DataType>(&self, id: ree::InstanceId, property: &str) -> Option<T> {
+        let name = self.reflection().name_id(property)?;
+        T::from_value(self.dom().raw_get(id, name)?)
+    }
+
+    pub fn set_as<T: DataType>(&self, id: ree::InstanceId, property: &str, value: T) -> bool {
+        let Some(name) = self.reflection().name_id(property) else {
+            return false;
+        };
+        self.set(id, name, value.into_value())
     }
 
     pub fn rename(&self, id: ree::InstanceId, name: &str) -> anyhow::Result<()> {
